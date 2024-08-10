@@ -1,0 +1,46 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../generated/client"
+  binaryTargets   = ["native", "debian-openssl-3.0.x"]
+  previewFeatures = ["postgresqlExtensions", "fullTextSearch", "relationJoins"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pg_trgm, fuzzystrmatch, uuidOssp(map: "uuid-ossp")]
+}
+
+model statement {
+  id                  String     @id @default(cuid())
+  recivedNumber       String     @unique @map("recived_number") // Hasaba alnan belgisi
+  recivedDate         DateTime   @map("recived_date") @db.Date // Gelen senesi
+  executorRecivedDate DateTime   @map("executor_recived_date") @db.Date // Ýerine ýetirijä berilen senesi
+  executedDate        DateTime   @map("executed_date") @db.Date // Seredilen senesi
+  applicant           String     @db.VarChar(255) // Ýüz tutýanyň familiýasy, ady, atasynyň ady, edarasynyň/ guramasynyň ady, salgysy
+  description         String     @db.Text // Jenaýat hakynda arzanyň, habaryň gysgaça mazmuny
+  result              String     @db.Text // Jenaýat hakynda seredilen arzanyň, habaryň netijesi
+  userId              String     @map("user_id")
+  status              String
+  createdAt           DateTime   @default(dbgenerated("NOW()")) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+  deletedAt           DateTime?  @map("deleted_at") @db.Timestamptz()
+  dismantle           dismantle?
+  // workedDate          DateTime   @map("worked_date") @db.Date // Kararyň sökülen senesi
+}
+
+model dismantle {
+  statementId      String    @unique
+  statements       statement @relation(fields: [statementId], references: [id])
+  createdAt        DateTime  @default(dbgenerated("NOW()")) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz()
+  prosecutorResult String    @map("prosecutor_result") @db.Text // Prokuroryň gözegçilik tertibine kabul eden kararyt hakynda seredilen arzanyň, habaryň netijesi
+}
+
+model articles {
+  id                  String      @id @default(cuid())
+  createdAt           DateTime    @default(dbgenerated("NOW()")) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+  deletedAt           DateTime?   @map("deleted_at") @db.Timestamptz()
+}
