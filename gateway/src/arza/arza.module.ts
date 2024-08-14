@@ -13,8 +13,14 @@ import { APP_FILTER } from '@nestjs/core';
         transport: Transport.GRPC,
         options: {
           package: 'arza',
-          protoPath: join(process.cwd(), 'proto/arza.proto'),
-          // url: 'localhost:50051',
+          protoPath: join(process.cwd(), '..', 'proto/arza.proto'),
+          /*
+          protoPath: [
+            resolve('../protos/service/hero.proto'),
+            resolve('../protos/service/vehicle.proto'),
+          ],
+          url: 'localhost:50051',
+          */
           url: `0.0.0.0:5050`,
           loader: {
             keepCase: true,
@@ -23,7 +29,7 @@ import { APP_FILTER } from '@nestjs/core';
             defaults: false,
             arrays: true,
             objects: true,
-            includeDirs: [join(process.cwd(), 'proto')],
+            includeDirs: [join(process.cwd(), '..', 'proto')],
           },
           // url: 'https://b6a4cd09.ngrok.io/',
         },

@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
-import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
-const loader = require('@grpc/proto-loader');
 
 @Module({
   imports: [
@@ -13,15 +11,23 @@ const loader = require('@grpc/proto-loader');
         transport: Transport.GRPC,
         options: {
           package: 'auth',
-          protoPath: join(process.cwd(), 'proto/auth.proto'),
-          url: 'localhost:50051',
-          // url: '127.0.0.1:5001',
-          // loader: loader,
+          protoPath: join(process.cwd(), '..', 'proto/auth.proto'),
+          // url: 'localhost:50051',
+          url: `0.0.0.0:5051`,
+          loader: {
+            keepCase: true,
+            longs: Number,
+            enums: String,
+            defaults: false,
+            arrays: true,
+            objects: true,
+            includeDirs: [join(process.cwd(), 'proto')],
+          },
         },
       },
     ]),
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  // providers: [UsersService],
 })
 export class UsersModule {}

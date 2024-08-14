@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package arza;
+
+service ArzaService {
+  rpc CreateArza (CreateArzaDto) returns (Arza) {}
+  rpc FindAllArza(FindAllDto) returns(Arzalar) {}
+  rpc FindOneArza(FindOneArzaDto) returns(Arza) {}
+  rpc RemoveArza (FindOneArzaDto) returns (Arza) {}
+  rpc CreateDismantle(CreateDismantleDto) returns(Arza) {}
+  rpc CreateResolution(Resolution) returns(Arza) {} // prokuror rezolyusiya goymak uchin
+  rpc ArchiveAza(FindOneArzaDto) returns(Arza) {} // new
+  rpc AddWorkSets(WorkSetDto) returns(WorkSet) {} // new
+}
+
+message WorkSetDto {
+  optional string id = 1;
+  string arzaId = 2;
+  repeated Files files = 3;
+  string type = 4;
+  string company = 5;
+  string author = 6;
+  optional string createdBy= 7;
+
+}
+
+/* MODELS */
+message Empty {};
+
+message Applicant {
+  string id = 1;
+  string arzaId = 2;
+  string passportSeriya = 3;
+  int64 passportNumber = 4;
+  string name = 5;
+  string lastname = 6;
+}
+
+message Arza {
+  string id = 1;
+  string created = 2;
+  int64 registredNumber = 3;
+  string descrtiption = 4;
+  string deadline = 5;
+  repeated Applicant applicants = 6;
+  repeated Files files = 7;
+  arzaStatusEnum status = 8;
+  string createdBy = 9;
+  optional Works work = 10;
+  optional Resolution resolution = 11;
+}
+
+message Files {
+  string id = 1;
+  string url = 2;
+}
+
+message Resolution {
+  string arzaId = 1;
+  string executorId = 2;
+  workTypeEnum type = 3;
+  optional string note = 4;
+  optional string createdBy = 5;
+}
+
+message Works {
+  string id = 1;
+  string arzaId = 2;
+  string executorId = 3;
+  int32 executedDays = 4;
+  workTypeEnum type = 5;
+  string createdBy = 6;
+  repeated WorkSet workSets = 7;
+}
+
+message WorkSet {
+  optional string id = 1;
+  repeated Files files = 2;
+  string type = 3;
+  string company = 4;
+  string createdBy = 5;
+}
+
+/* DTO-s */
+
+message CreateApplicantDto {
+  optional string id = 1;
+  string passportSeriya = 2;
+  int32 passportNumber = 3;
+  string name = 4;
+  string lastname = 5;
+}
+
+message CreateArzaDto {
+  optional string id = 1;
+  optional string created = 2;
+  string descrtiption = 3;
+  repeated CreateApplicantDto applicants = 4;
+  repeated Files files = 5;
+  string createdBy = 6;
+}
+
+message Arzalar {
+  int32 count = 1;
+  int32 newlyCount = 2;
+  int32 delayCount = 3;
+  repeated Arza rows = 4;
+}
+
+message FindOneArzaDto {
+  string id = 1;
+}
+
+message FindAllDto {
+  optional int32 page = 1;
+  optional int32 pageSize= 2;
+  optional int64 registredNumber = 3;
+  optional string created = 4;
+  optional string passportSeriya = 5;
+  optional int64 passportNumber = 6;
+  optional string search = 7;
+  optional string name = 8;
+  repeated arzaStatusEnum status = 9;
+}
+
+message CreateDismantleDto {
+  string prosecutorResult = 1;
+  string statementId = 2;
+}
+
+/* ENUMS */
+
+enum arzaStatusEnum {
+  newly = 0;
+  working = 1;
+  delay = 3;
+}
+
+enum workTypeEnum {
+  arza = 0;
+  hadysa = 1;
+  administrativ = 2;
+}

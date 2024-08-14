@@ -7,13 +7,7 @@ import { GrpcServerExceptionFilter } from 'nestjs-grpc-exceptions';
 
 @Module({
   controllers: [ArzaController],
-  providers: [
-    ArzaService,
-    // {
-    //   provide: APP_FILTER,
-    //   useClass: GrpcServerExceptionFilter,
-    // },
-  ],
-  imports: [PrismaClientModule]
+  providers: [ArzaService],
+  imports: [PrismaClientModule],
 })
 export class ArzaModule {}

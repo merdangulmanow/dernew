@@ -11,6 +11,19 @@ datasource db {
   extensions = [pg_trgm, fuzzystrmatch, uuidOssp(map: "uuid-ossp")]
 }
 
+enum arzaStatusEnum {
+  newly
+  delay
+  working
+  archive
+}
+
+enum wokrTypeEnum {
+  arza
+  hadysa
+  administrativ
+}
+
 model statement {
   id                  String     @id @default(cuid())
   recivedNumber       String     @unique @map("recived_number") // Hasaba alnan belgisi
@@ -22,9 +35,9 @@ model statement {
   result              String     @db.Text // Jenaýat hakynda seredilen arzanyň, habaryň netijesi
   userId              String     @map("user_id")
   status              String
-  createdAt           DateTime   @default(dbgenerated("NOW()")) @map("created_at")
-  updatedAt           DateTime   @updatedAt @map("updated_at")
-  deletedAt           DateTime?  @map("deleted_at") @db.Timestamptz()
+  created             DateTime   @default(dbgenerated("NOW()"))
+  updated             DateTime   @updatedAt @map("updated")
+  deleted             DateTime?  @db.Timestamptz()
   dismantle           dismantle?
   // workedDate          DateTime   @map("worked_date") @db.Date // Kararyň sökülen senesi
 }
@@ -32,15 +45,90 @@ model statement {
 model dismantle {
   statementId      String    @unique
   statements       statement @relation(fields: [statementId], references: [id])
-  createdAt        DateTime  @default(dbgenerated("NOW()")) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
-  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz()
+  created          DateTime  @default(dbgenerated("NOW()"))
+  updated          DateTime  @updatedAt @map("updated")
+  deleted          DateTime? @db.Timestamptz()
   prosecutorResult String    @map("prosecutor_result") @db.Text // Prokuroryň gözegçilik tertibine kabul eden kararyt hakynda seredilen arzanyň, habaryň netijesi
 }
 
 model articles {
-  id                  String      @id @default(cuid())
-  createdAt           DateTime    @default(dbgenerated("NOW()")) @map("created_at")
-  updatedAt           DateTime    @updatedAt @map("updated_at")
-  deletedAt           DateTime?   @map("deleted_at") @db.Timestamptz()
+  id      String    @id @default(cuid())
+  created DateTime  @default(dbgenerated("NOW()"))
+  updated DateTime  @updatedAt @map("updated")
+  deleted DateTime? @db.Timestamptz()
+}
+
+model umumyArzalar {
+  id              String          @id @default(cuid())
+  registredNumber Int             @map("registred_number")
+  descrtiption    String          @db.Text
+  deadline        DateTime        @default(dbgenerated("NOW() + interval '30 day'")) @db.Date
+  applicants      applicants[]
+  resolution      arzaResolution?
+  work            works?
+  files           Json[]          @db.JsonB
+  workSets        workSets[]
+  status          arzaStatusEnum  @default(newly)
+  createdBy       String
+  created         DateTime        @default(dbgenerated("NOW()")) // gelen senesi
+  updated         DateTime        @updatedAt @map("updated")
+  deleted         DateTime?       @db.Timestamptz()
+
+  @@map("umumy_arzalar")
+}
+
+model arzaResolution {
+  arzaId     String       @unique
+  arza       umumyArzalar @relation(fields: [arzaId], references: [id])
+  executorId String
+  type       wokrTypeEnum
+  note       String       @db.Text
+  createdBy  String
+  created    DateTime     @default(dbgenerated("NOW()"))
+  updated    DateTime     @updatedAt @map("updated")
+  deleted    DateTime?    @db.Timestamptz()
+
+  @@map("arza_resolution")
+}
+
+model applicants {
+  id             String       @id @default(cuid())
+  arzaId         String
+  arza           umumyArzalar @relation(fields: [arzaId], references: [id])
+  passportSeriya String
+  passportNumber Int
+  name           String
+  lastname       String
+  createdBy      String
+  created        DateTime     @default(dbgenerated("NOW()"))
+  deleted        DateTime?    @db.Timestamptz()
+}
+
+model workSets {
+  id        String       @id @default(cuid())
+  files     Json[]       @db.JsonB
+  type      String
+  company   String
+  author    String
+  arzaId    String
+  arza      umumyArzalar @relation(fields: [arzaId], references: [id])
+  createdBy String
+  created   DateTime     @default(dbgenerated("NOW()"))
+  deleted   DateTime?    @db.Timestamptz()
+
+  @@map("work_sets")
+}
+
+
+// duzuetmeli......
+model works {
+  id           String       @id @default(cuid())
+  arzaId       String       @unique
+  arza         umumyArzalar @relation(fields: [arzaId], references: [id])
+  executorId   String       @map("executor_id")
+  executedDays Int          @map("executed_days")
+  type         wokrTypeEnum
+  createdBy    String
+  created      DateTime     @default(dbgenerated("NOW()"))
+  deleted      DateTime?    @db.Timestamptz()
 }

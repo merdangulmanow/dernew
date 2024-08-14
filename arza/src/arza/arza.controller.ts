@@ -1,7 +1,21 @@
-import { ClassSerializerInterceptor, Controller, UseInterceptors } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Controller,
+  UseFilters,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ArzaService } from './arza.service';
-import { ArzaServiceControllerMethods, CreateArzaDto, FindAllDto, FindOneArzaDto } from './arza';import { HttpToGrpcInterceptor } from 'nestjs-grpc-exceptions';
-;
+import {
+  ArzaServiceControllerMethods,
+  CreateArzaDto,
+  CreateDismantleDto,
+  FindAllDto,
+  FindOneArzaDto,
+  Resolution,
+  WorkSetDto,
+} from './arza';
+import { GrpcMethod } from '@nestjs/microservices';
+import { Http2gRPCExceptionFilter } from '@/http2gRPCException.filter';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller()
@@ -9,8 +23,8 @@ import { ArzaServiceControllerMethods, CreateArzaDto, FindAllDto, FindOneArzaDto
 export class ArzaController {
   constructor(private readonly arzaService: ArzaService) {}
 
-  // @UseInterceptors(HttpToGrpcInterceptor)
-  createArza(request: CreateArzaDto) {
+  // @GrpcMethod('ArzaService', 'createArza')
+  createArza(request: CreateArzaDto /* metadata: grpc.Metadata */) {
     return this.arzaService.createArza(request);
   }
 
@@ -18,11 +32,29 @@ export class ArzaController {
     return this.arzaService.findAllArza(request);
   }
 
+  // @UseFilters(new Http2gRPCExceptionFilter())
   findOneArza(request: FindOneArzaDto) {
+    console.log(">>>>>>>>>>>> arzaController findOneArza\n")
     return this.arzaService.findOneArza(request);
   }
 
   removeArza(request: FindOneArzaDto) {
     return this.arzaService.removeArza(request);
+  }
+
+  createDismantle(request: CreateDismantleDto) {
+    return this.arzaService.createDismantle(request);
+  }
+
+  createResolution(request: Resolution) {
+    return this.arzaService.createResolution(request);
+  }
+
+  archiveAza(request: FindOneArzaDto) {
+    return this.arzaService.archiveAza(request);
+  }
+
+  addWorkSets(request: WorkSetDto) {
+    return this.arzaService.addWorkSets(request);
   }
 }

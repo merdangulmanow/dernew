@@ -1,12 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import {
-  HttpException,
-  HttpStatus,
-  ValidationPipe,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, ValidationPipe } from '@nestjs/common';
 import { RpcExceptionFilter } from './filters/rpc-exception-filter';
-
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,7 +25,7 @@ async function bootstrap() {
       },
     }),
   );
-  app.useGlobalFilters(new RpcExceptionFilter());
+  // app.useGlobalFilters(new RpcExceptionFilter());
   await app.startAllMicroservices();
   await app.listen(PORT);
   console.log(`app running on ${PORT}`);
