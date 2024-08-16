@@ -9,19 +9,11 @@ service ArzaService {
   rpc RemoveArza (FindOneArzaDto) returns (Arza) {}
   rpc CreateDismantle(CreateDismantleDto) returns(Arza) {}
   rpc CreateResolution(Resolution) returns(Arza) {} // prokuror rezolyusiya goymak uchin
-  rpc ArchiveAza(FindOneArzaDto) returns(Arza) {} // new
-  rpc AddWorkSets(WorkSetDto) returns(WorkSet) {} // new
-}
-
-message WorkSetDto {
-  optional string id = 1;
-  string arzaId = 2;
-  repeated Files files = 3;
-  string type = 4;
-  string company = 5;
-  string author = 6;
-  optional string createdBy= 7;
-
+  rpc ArchiveAza(FindOneArzaDto) returns(Arza) {}
+  rpc AddWorkSetItem(WorkSetItems) returns(WorkSetItems) {}
+  rpc GetWorkSets(FindAllWorkSetsDto) returns(WorkSets) {}
+  rpc GetWorkSetsItems(FindOneArzaDto) returns(WorkSetItems) {}
+  rpc ApproveDoc(ApproveDocDto) returns(WorkSetItems) {}
 }
 
 /* MODELS */
@@ -48,6 +40,14 @@ message Arza {
   string createdBy = 9;
   optional Works work = 10;
   optional Resolution resolution = 11;
+  optional WorkSet workSet = 12;
+}
+
+message Arzalar {
+  int32 count = 1;
+  int32 newlyCount = 2;
+  int32 delayCount = 3;
+  repeated Arza rows = 4;
 }
 
 message Files {
@@ -71,14 +71,41 @@ message Works {
   workTypeEnum type = 5;
   string createdBy = 6;
   repeated WorkSet workSets = 7;
+  string status = 8;
+}
+
+// message WorkSet {
+//   optional string id = 1;
+//   repeated Files files = 2;
+//   string type = 3;
+//   string companyId = 4;
+//   string createdBy = 5;
+//   string status = 6;
+// }
+
+message WorkSets {
+  int32 count = 1;
+  repeated WorkSet rows = 2;
+}
+
+message WorkSetItems {
+  optional string id = 1;
+  string workSetId = 2;
+  repeated Files files = 3;
+  string type = 4;
+  string company = 5;
+  string author = 6;
+  optional string createdBy= 7;
+  optional string created = 8;
 }
 
 message WorkSet {
-  optional string id = 1;
-  repeated Files files = 2;
-  string type = 3;
-  string company = 4;
-  string createdBy = 5;
+  string id = 1;
+  string registredNumber = 2;
+  string arzaId = 3;
+  string companyId = 4;
+  string executorId = 5;
+  string type = 6;
 }
 
 /* DTO-s */
@@ -100,13 +127,6 @@ message CreateArzaDto {
   string createdBy = 6;
 }
 
-message Arzalar {
-  int32 count = 1;
-  int32 newlyCount = 2;
-  int32 delayCount = 3;
-  repeated Arza rows = 4;
-}
-
 message FindOneArzaDto {
   string id = 1;
 }
@@ -123,9 +143,33 @@ message FindAllDto {
   repeated arzaStatusEnum status = 9;
 }
 
+message FindAllWorkSetsDto {
+  optional int32 page = 1;
+  optional int32 pageSize= 2;
+  optional string status = 3;
+  optional string createdBy= 4;
+}
+
 message CreateDismantleDto {
   string prosecutorResult = 1;
   string statementId = 2;
+}
+
+message WorkSetItemDto {
+  optional string id = 1;
+  string arzaId = 2;
+  repeated Files files = 3;
+  string type = 4;
+  string companyId = 5;
+  string author = 6;
+  optional string createdBy= 7;
+  string status = 8;
+}
+
+message ApproveDocDto {
+  string id = 1;
+  string approve = 2;
+  optional string reason = 3;
 }
 
 /* ENUMS */

@@ -1,21 +1,20 @@
 import {
   ClassSerializerInterceptor,
   Controller,
-  UseFilters,
   UseInterceptors,
 } from '@nestjs/common';
 import { ArzaService } from './arza.service';
 import {
+  ApproveDocDto,
   ArzaServiceControllerMethods,
   CreateArzaDto,
   CreateDismantleDto,
   FindAllDto,
+  FindAllWorkSetsDto,
   FindOneArzaDto,
   Resolution,
-  WorkSetDto,
+  WorkSetItems,
 } from './arza';
-import { GrpcMethod } from '@nestjs/microservices';
-import { Http2gRPCExceptionFilter } from '@/http2gRPCException.filter';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller()
@@ -34,7 +33,7 @@ export class ArzaController {
 
   // @UseFilters(new Http2gRPCExceptionFilter())
   findOneArza(request: FindOneArzaDto) {
-    console.log(">>>>>>>>>>>> arzaController findOneArza\n")
+    console.log('>>>>>>>>>>>> arzaController findOneArza\n');
     return this.arzaService.findOneArza(request);
   }
 
@@ -54,7 +53,20 @@ export class ArzaController {
     return this.arzaService.archiveAza(request);
   }
 
-  addWorkSets(request: WorkSetDto) {
-    return this.arzaService.addWorkSets(request);
+  addWorkSetItem(request: WorkSetItems) {
+    return this.arzaService.addWorkSetItem(request);
+  }
+
+  // getWorkSets(request: Observable<FindAllWorkSetsDto>) {
+  getWorkSets(request: FindAllWorkSetsDto) {
+    return this.arzaService.getWorkSets(request);
+  }
+
+  getWorkSetsItems(request: FindOneArzaDto) {
+    return this.arzaService.getWorkSetsItems(request);
+  }
+
+  approveDoc(request: ApproveDocDto){
+    return this.arzaService.approveDoc(request)
   }
 }

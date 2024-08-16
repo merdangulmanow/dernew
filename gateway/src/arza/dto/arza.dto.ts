@@ -3,6 +3,7 @@ import {
   IsArray,
   IsDateString,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -11,14 +12,17 @@ import {
   ValidateNested,
 } from 'class-validator';
 import {
+  ApproveDocDto,
   CreateApplicantDto,
   CreateArzaDto,
   Files,
   Resolution,
-  WorkSetDto,
+  WorkSetItemDto,
+  WorkSetItems,
   workTypeEnum,
 } from '../arza';
 import { Expose, Transform, Type } from 'class-transformer';
+import { workSetItemStatusEnum } from '@/utils/enums';
 
 export class filesDto implements Files {
   @IsNotEmpty()
@@ -99,7 +103,7 @@ export class resolutionDto implements Resolution {
   readonly createdBy?: string;
 }
 
-export class workSetDto implements WorkSetDto {
+export class workSetItemDto implements WorkSetItems {
   @IsOptional()
   @IsString()
   @Expose()
@@ -107,18 +111,16 @@ export class workSetDto implements WorkSetDto {
     return value ? value : '';
   })
   readonly id?: string;
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  readonly arzaId: string;
+  readonly created?: string;
   @IsNotEmpty()
   @IsString()
   readonly author: string;
   @IsNotEmpty()
   @IsString()
   readonly company: string;
-  @IsOptional()
-  @IsString()
-  readonly createdBy?: string;
+  createdBy?: string;
   @IsArray()
   @IsNotEmpty()
   @ValidateNested({ each: true })
@@ -127,4 +129,19 @@ export class workSetDto implements WorkSetDto {
   @IsNotEmpty()
   @IsString()
   readonly type: string;
+  @IsNotEmpty()
+  @IsString()
+  readonly workSetId: string;
+}
+
+export class approveDocDto implements ApproveDocDto {
+  @IsOptional()
+  @IsString()
+  readonly id: string;
+  @IsNotEmpty()
+  @IsIn([workSetItemStatusEnum.approved, workSetItemStatusEnum.rejected])
+  readonly approve: string;
+  @IsOptional()
+  @IsString()
+  readonly reason?: string;
 }

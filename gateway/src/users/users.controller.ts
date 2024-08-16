@@ -1,4 +1,10 @@
-import { Controller, Get, UseInterceptors, OnModuleInit, Inject } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  UseInterceptors,
+  OnModuleInit,
+  Inject,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { baseResponseInterceptor } from '@/filters/base-response-filter';
@@ -8,11 +14,11 @@ import { ClientGrpc } from '@nestjs/microservices';
 @UseInterceptors(baseResponseInterceptor)
 @Controller('users')
 export class UsersController implements OnModuleInit {
-
   private userService: UsersServiceClient;
   constructor(@Inject('auth') private client: ClientGrpc) {}
   onModuleInit() {
-    this.userService = this.client.getService<UsersServiceClient>('UsersService');
+    this.userService =
+      this.client.getService<UsersServiceClient>('UsersService');
   }
 
   // @Post()
@@ -22,7 +28,7 @@ export class UsersController implements OnModuleInit {
 
   @Get()
   findAll() {
-    return this.userService.findAllUsers({})
+    return this.userService.findAllUsers({});
   }
 
   // @Get(':id')

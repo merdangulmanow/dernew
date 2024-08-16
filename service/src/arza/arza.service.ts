@@ -1,17 +1,36 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  OnModuleInit,
+  RequestTimeoutException,
+} from '@nestjs/common';
 import { ClientGrpc } from '@nestjs/microservices';
-import { Arza, ArzaServiceClient, arzaStatusEnum, CreateArzaDto, FindAllDto, FindOneArzaDto } from './arza';
-import { from, map, Observable, switchMap } from 'rxjs';
+import {
+  Arza,
+  ArzaServiceClient,
+  arzaStatusEnum,
+  CreateArzaDto,
+  FindAllDto,
+  FindOneArzaDto,
+} from './arza';
+import {
+  catchError,
+  from,
+  map,
+  Observable,
+  switchMap,
+  throwError,
+  timeout,
+  TimeoutError,
+} from 'rxjs';
 
 @Injectable()
 export class ArzaService implements OnModuleInit {
-  // constructor(private readonly arzaService: ArzaService) {}
   constructor(@Inject('arza') private client: ClientGrpc) {}
-  private arzaService: ArzaServiceClient;  
+  private arzaService: ArzaServiceClient;
   onModuleInit() {
     this.arzaService = this.client.getService<ArzaServiceClient>('ArzaService');
   }
-
 
   create(createArzaDto: CreateArzaDto) {
     return this.arzaService.createArza(createArzaDto);
@@ -21,8 +40,19 @@ export class ArzaService implements OnModuleInit {
     return this.arzaService.findAllArza(dto);
   }
 
-  findOneArza(dto: FindOneArzaDto) {
-    console.log(">>>>>>>>>> findOneArza ", dto)
-    return this.arzaService.findOneArza(dto)
-  }  
+  async findOneArza(dto: FindOneArzaDto) {
+    
+    return this.arzaService
+      .findOneArza(dto)
+      .pipe(
+        timeout(5000),
+        catchError((err) => {
+          if (err instanceof TimeoutError) {
+            return throwError(new RequestTimeoutException());
+          }
+          return throwError(err);
+        }),
+      )
+      .toPromise();
+  }
 }

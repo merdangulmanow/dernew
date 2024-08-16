@@ -5,7 +5,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 
 @Module({
-  
   controllers: [UsersController],
   providers: [UsersService],
 })

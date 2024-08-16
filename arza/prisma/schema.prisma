@@ -24,6 +24,17 @@ enum wokrTypeEnum {
   administrativ
 }
 
+enum workSetItemStatusEnum {
+  rejected
+  approved
+}
+
+enum workSetTypeEnum {
+  jenayat_hadysa
+  jenayat_arza
+  gozegchilik_onumchilik
+}
+
 model statement {
   id                  String     @id @default(cuid())
   recivedNumber       String     @unique @map("recived_number") // Hasaba alnan belgisi
@@ -67,7 +78,7 @@ model umumyArzalar {
   resolution      arzaResolution?
   work            works?
   files           Json[]          @db.JsonB
-  workSets        workSets[]
+  workSets        workSets?
   status          arzaStatusEnum  @default(newly)
   createdBy       String
   created         DateTime        @default(dbgenerated("NOW()")) // gelen senesi
@@ -105,20 +116,37 @@ model applicants {
 }
 
 model workSets {
-  id        String       @id @default(cuid())
-  files     Json[]       @db.JsonB
-  type      String
-  company   String
-  author    String
-  arzaId    String
-  arza      umumyArzalar @relation(fields: [arzaId], references: [id])
-  createdBy String
-  created   DateTime     @default(dbgenerated("NOW()"))
-  deleted   DateTime?    @db.Timestamptz()
+  id              String          @id @default(cuid())
+  registredNumber String
+  arzaId          String  @unique
+  arza            umumyArzalar    @relation(fields: [arzaId], references: [id])
+  companyId       String
+  executorId      String
+  type            workSetTypeEnum // enum bolmaly [jeneyat arza, jenayat hadysa, administrativ]
+  items           workSetItems[]
+  createdBy       String
+  created         DateTime        @default(dbgenerated("NOW()"))
+  deleted         DateTime?       @db.Timestamptz()
 
   @@map("work_sets")
 }
 
+model workSetItems {
+  id        String                 @id @default(cuid())
+  files     Json[]                 @db.JsonB
+  type      String
+  company   String
+  author    String
+  createdBy String
+  status    workSetItemStatusEnum?
+  reason    String?
+  created   DateTime               @default(dbgenerated("NOW()"))
+  deleted   DateTime?              @db.Timestamptz()
+  workSetId String                 @map("work_set_id")
+  workSet   workSets               @relation(fields: [workSetId], references: [id])
+
+  @@map("work_set_items")
+}
 
 // duzuetmeli......
 model works {

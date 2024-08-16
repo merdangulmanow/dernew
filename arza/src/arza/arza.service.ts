@@ -1,21 +1,25 @@
 import {
+  ApproveDocDto,
   Arza,
   Arzalar,
-  // arzaStatus,
   CreateArzaDto,
   CreateDismantleDto,
   FindAllDto,
+  FindAllWorkSetsDto,
   FindOneArzaDto,
   Resolution,
-  WorkSet,
-  WorkSetDto,
+  WorkSetItems,
+  WorkSets,
 } from './arza';
 import { PrismaClientService } from '@/prisma-client/prisma-client.service';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { arzaResponse } from '@/response/arza.response';
+import { arzaResponse,  } from '@/response/arza.response';
 import { RpcException } from '@nestjs/microservices';
-import { arzaStatusEnum, Prisma, wokrTypeEnum } from 'generated/client';
+import {
+  arzaStatusEnum,
+  Prisma,
+} from 'generated/client';
 import { randomInt } from 'crypto';
 
 @Injectable()
@@ -143,7 +147,6 @@ export class ArzaService implements OnModuleInit {
   }
 
   async findOneArza({ id }: FindOneArzaDto): Promise<Arza> {
-    console.log(">>>>>>>>>>>>>> findOneArza looking for ", id)
     const arza = await this.prismaClient.umumyArzalar.findFirst({
       where: { id: id, deleted: null },
       include: {
@@ -156,8 +159,6 @@ export class ArzaService implements OnModuleInit {
     if (!arza?.id) {
       throw new RpcException({ code: 404, message: 'arza not found' });
     }
-    console.log('>>>>>>>>>>>>>>> found arza...')
-    console.log(arza.id, '\n\n')
     return plainToInstance(arzaResponse, arza);
   }
 
@@ -217,13 +218,15 @@ export class ArzaService implements OnModuleInit {
       await this.prismaClient.workSets.create({
         data: {
           createdBy: dto.createdBy,
-          type: arza.status.toString(),
+          type: 'jenayat_hadysa', // mock
           arzaId: dto.arzaId,
-          author: arza.applicants[0].name + arza.applicants[0].lastname,
-          company: 'creator_company',
-          files: arza.files.map((item) => {
-            return { ...item };
-          }),
+          executorId: dto.executorId,
+          registredNumber: `${randomInt(2, 100)}`,
+          // author: arza.applicants[0].name + arza.applicants[0].lastname,
+          companyId: 'creator_company',
+          // files: arza.files.map((item) => {
+          //   return { ...item };
+          // }),
         },
       });
       return this.findOneArza({ id: dto.arzaId });
@@ -240,8 +243,9 @@ export class ArzaService implements OnModuleInit {
     return this.findOneArza({ id: id });
   }
 
-  async addWorkSets(dto: WorkSetDto) {
-    const workSet = await this.prismaClient.workSets.upsert({
+  async addWorkSetItem(dto: WorkSetItems) {
+    console.log(dto)
+    const workSet = await this.prismaClient.workSetItems.upsert({
       where: { id: dto?.id ? dto?.id : '' },
       create: {
         files: dto.files.map((item) => {
@@ -249,10 +253,10 @@ export class ArzaService implements OnModuleInit {
         }),
         createdBy: dto.createdBy,
         author: dto.author,
-        company: dto.company,
         type: dto.type,
-        arzaId: dto.arzaId,
         deleted: null,
+        company: dto.company,
+        workSetId: dto.workSetId,
       },
       update: {
         files: dto.files.map((item) => {
@@ -260,12 +264,69 @@ export class ArzaService implements OnModuleInit {
         }),
         createdBy: dto.createdBy,
         author: dto.author,
-        company: dto.company,
         type: dto.type,
-        arzaId: dto.arzaId,
         deleted: null,
+        company: dto.company,
+        workSetId: dto.workSetId,
       },
     });
     return workSet;
+  }
+
+  async getWorkSets(dto: FindAllWorkSetsDto): Promise<WorkSets> {
+    try {
+      let pageSize: number = dto.pageSize || 10;
+      let page: number = dto.page || 1;
+      const skip: number = page * pageSize - pageSize;
+      const count = await this.prismaClient.workSets.count({
+        where: { deleted: null },
+      });
+      const rows = await this.prismaClient.workSets.findMany({
+        where: { deleted: null },
+        take: pageSize,
+        skip: skip,
+      });
+      return { count, rows };
+    } catch (err) {}
+  }
+
+  async getWorkSetsItems(dto: FindOneArzaDto) {
+    const workSet = await this.prismaClient.workSets.findFirst({
+      where: { id: dto.id, deleted: null },
+      include: {
+        items: {
+          orderBy: { created: 'desc' },
+        },
+      },
+    });
+    if (!workSet?.id) {
+      throw new RpcException({ code: 404, message: 'workset not found' });
+    }
+    return workSet;
+  }
+
+  async getOneWorkSetItem({id}: FindOneArzaDto){
+    try {
+      const item= await this.prismaClient.workSetItems.findFirst({where: {id: id, deleted: null}})
+      if(!item?.id){
+        throw new RpcException({ code: 404, message: 'workset not found' });
+      }
+      return item
+    } catch (err) {
+      throw new RpcException({ code: 404, message: 'workset not found' });
+    }
+  }
+
+  async approveDoc(dto: ApproveDocDto){
+    try {
+      await this.getOneWorkSetItem({id:dto.id})
+      await this.prismaClient.workSetItems.update({
+        where: {id: dto.id},
+        data: {status: dto?.approve == true ? 'approved': 'rejected', reason: dto?.reason || ""}
+      })
+      return this.getOneWorkSetItem({id: dto.id})
+    } catch (err) {
+      throw new RpcException({ code: 404, message: 'workset not found' });
+    }
   }
 }

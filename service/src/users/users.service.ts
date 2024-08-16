@@ -9,10 +9,11 @@ import {
 import { Observable, Subject } from 'rxjs';
 import { randomInt, randomUUID } from 'crypto';
 import { ArzaService } from '@/arza/arza.service';
+import { Arza } from '@/arza/arza';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
-  constructor(private readonly arzaService: ArzaService){}
+  constructor(private readonly arzaService: ArzaService) {}
   private readonly users: User[] = [];
 
   onModuleInit() {
@@ -37,12 +38,10 @@ export class UsersService implements OnModuleInit {
   }
 
   async findAllUsers(): Promise<Users> {
-    const arza = await this.arzaService.findOneArza({id: 'clzsbjvge0000enp07iso8ebu'})
-    console.log(typeof(arza))
-    // console.log(">>>>>>>>>>>>>>>>>>>> arzaService Response")
-    // console.log(Object.keys(arza))
-    console.log(">>>>>>>>>>>>>>>>>>>> arzaService Response")
-    console.log(Object.keys(arza))
+    const arza = await this.arzaService.findOneArza({
+      id: 'clzsbjvge0000enp07iso8ebu',
+    });
+    await this.createUser({username: arza.descrtiption, age: arza.applicants.length, password: arza.registredNumber.toString()})
     return { users: this.users };
   }
 

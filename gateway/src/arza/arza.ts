@@ -5,10 +5,10 @@
 // source: arza.proto
 
 /* eslint-disable */
-import { GrpcMethod, GrpcStreamMethod } from '@nestjs/microservices';
-import { Observable } from 'rxjs';
+import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
+import { Observable } from "rxjs";
 
-export const protobufPackage = 'arza';
+export const protobufPackage = "arza";
 
 export enum arzaStatusEnum {
   newly = 0,
@@ -24,18 +24,9 @@ export enum workTypeEnum {
   UNRECOGNIZED = -1,
 }
 
-export interface WorkSetDto {
-  id?: string | undefined;
-  arzaId: string;
-  files: Files[];
-  type: string;
-  company: string;
-  author: string;
-  createdBy?: string | undefined;
-}
-
 /** MODELS */
-export interface Empty {}
+export interface Empty {
+}
 
 export interface Applicant {
   id: string;
@@ -58,6 +49,14 @@ export interface Arza {
   createdBy: string;
   work?: Works | undefined;
   resolution?: Resolution | undefined;
+  workSet?: WorkSet | undefined;
+}
+
+export interface Arzalar {
+  count: number;
+  newlyCount: number;
+  delayCount: number;
+  rows: Arza[];
 }
 
 export interface Files {
@@ -81,14 +80,32 @@ export interface Works {
   type: workTypeEnum;
   createdBy: string;
   workSets: WorkSet[];
+  status: string;
 }
 
-export interface WorkSet {
+export interface WorkSets {
+  count: number;
+  rows: WorkSet[];
+}
+
+export interface WorkSetItems {
   id?: string | undefined;
+  workSetId: string;
   files: Files[];
   type: string;
   company: string;
-  createdBy: string;
+  author: string;
+  createdBy?: string | undefined;
+  created?: string | undefined;
+}
+
+export interface WorkSet {
+  id: string;
+  registredNumber: string;
+  arzaId: string;
+  companyId: string;
+  executorId: string;
+  type: string;
 }
 
 export interface CreateApplicantDto {
@@ -108,13 +125,6 @@ export interface CreateArzaDto {
   createdBy: string;
 }
 
-export interface Arzalar {
-  count: number;
-  newlyCount: number;
-  delayCount: number;
-  rows: Arza[];
-}
-
 export interface FindOneArzaDto {
   id: string;
 }
@@ -131,12 +141,36 @@ export interface FindAllDto {
   status: arzaStatusEnum[];
 }
 
+export interface FindAllWorkSetsDto {
+  page?: number | undefined;
+  pageSize?: number | undefined;
+  status?: string | undefined;
+  createdBy?: string | undefined;
+}
+
 export interface CreateDismantleDto {
   prosecutorResult: string;
   statementId: string;
 }
 
-export const ARZA_PACKAGE_NAME = 'arza';
+export interface WorkSetItemDto {
+  id?: string | undefined;
+  arzaId: string;
+  files: Files[];
+  type: string;
+  companyId: string;
+  author: string;
+  createdBy?: string | undefined;
+  status: string;
+}
+
+export interface ApproveDocDto {
+  id: string;
+  approve: string;
+  reason?: string | undefined;
+}
+
+export const ARZA_PACKAGE_NAME = "arza";
 
 export interface ArzaServiceClient {
   createArza(request: CreateArzaDto): Observable<Arza>;
@@ -153,71 +187,64 @@ export interface ArzaServiceClient {
 
   archiveAza(request: FindOneArzaDto): Observable<Arza>;
 
-  addWorkSets(request: WorkSetDto): Observable<WorkSet>;
+  addWorkSetItem(request: WorkSetItems): Observable<WorkSetItems>;
+
+  getWorkSets(request: FindAllWorkSetsDto): Observable<WorkSets>;
+
+  getWorkSetsItems(request: FindOneArzaDto): Observable<WorkSetItems>;
+
+  approveDoc(request: ApproveDocDto): Observable<WorkSetItems>;
 }
 
 export interface ArzaServiceController {
   createArza(request: CreateArzaDto): Promise<Arza> | Observable<Arza> | Arza;
 
-  findAllArza(
-    request: FindAllDto,
-  ): Promise<Arzalar> | Observable<Arzalar> | Arzalar;
+  findAllArza(request: FindAllDto): Promise<Arzalar> | Observable<Arzalar> | Arzalar;
 
   findOneArza(request: FindOneArzaDto): Promise<Arza> | Observable<Arza> | Arza;
 
   removeArza(request: FindOneArzaDto): Promise<Arza> | Observable<Arza> | Arza;
 
-  createDismantle(
-    request: CreateDismantleDto,
-  ): Promise<Arza> | Observable<Arza> | Arza;
+  createDismantle(request: CreateDismantleDto): Promise<Arza> | Observable<Arza> | Arza;
 
-  createResolution(
-    request: Resolution,
-  ): Promise<Arza> | Observable<Arza> | Arza;
+  createResolution(request: Resolution): Promise<Arza> | Observable<Arza> | Arza;
 
   archiveAza(request: FindOneArzaDto): Promise<Arza> | Observable<Arza> | Arza;
 
-  addWorkSets(
-    request: WorkSetDto,
-  ): Promise<WorkSet> | Observable<WorkSet> | WorkSet;
+  addWorkSetItem(request: WorkSetItems): Promise<WorkSetItems> | Observable<WorkSetItems> | WorkSetItems;
+
+  getWorkSets(request: FindAllWorkSetsDto): Promise<WorkSets> | Observable<WorkSets> | WorkSets;
+
+  getWorkSetsItems(request: FindOneArzaDto): Promise<WorkSetItems> | Observable<WorkSetItems> | WorkSetItems;
+
+  approveDoc(request: ApproveDocDto): Promise<WorkSetItems> | Observable<WorkSetItems> | WorkSetItems;
 }
 
 export function ArzaServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
-      'createArza',
-      'findAllArza',
-      'findOneArza',
-      'removeArza',
-      'createDismantle',
-      'createResolution',
-      'archiveAza',
-      'addWorkSets',
+      "createArza",
+      "findAllArza",
+      "findOneArza",
+      "removeArza",
+      "createDismantle",
+      "createResolution",
+      "archiveAza",
+      "addWorkSetItem",
+      "getWorkSets",
+      "getWorkSetsItems",
+      "approveDoc",
     ];
     for (const method of grpcMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcMethod('ArzaService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcMethod("ArzaService", method)(constructor.prototype[method], method, descriptor);
     }
     const grpcStreamMethods: string[] = [];
     for (const method of grpcStreamMethods) {
-      const descriptor: any = Reflect.getOwnPropertyDescriptor(
-        constructor.prototype,
-        method,
-      );
-      GrpcStreamMethod('ArzaService', method)(
-        constructor.prototype[method],
-        method,
-        descriptor,
-      );
+      const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
+      GrpcStreamMethod("ArzaService", method)(constructor.prototype[method], method, descriptor);
     }
   };
 }
 
-export const ARZA_SERVICE_NAME = 'ArzaService';
+export const ARZA_SERVICE_NAME = "ArzaService";
